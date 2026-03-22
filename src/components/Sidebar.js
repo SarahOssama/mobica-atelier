@@ -28,6 +28,9 @@ export default function Sidebar({ selectedCladding, selectedDesk, onSelectCladdi
           padding: "24px 24px 18px",
           borderBottom: "1px solid #D6CCBC",
           flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
         }}
       >
         <LogoImage />
@@ -39,7 +42,6 @@ export default function Sidebar({ selectedCladding, selectedDesk, onSelectCladdi
             fontSize: "1.1rem",
             color: "#8B6B4A",
             letterSpacing: "0.06em",
-            marginTop: "4px",
           }}
         >
           Atelier
@@ -161,7 +163,7 @@ function LogoImage() {
     <img
       src="/mobica_logo.png"
       alt="Mobica"
-      style={{ height: "28px", width: "auto", objectFit: "contain", display: "block" }}
+      style={{ height: "40px", width: "auto", objectFit: "contain", display: "block" }}
       onError={() => setShow(false)}
     />
   );
