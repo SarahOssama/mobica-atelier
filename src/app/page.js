@@ -22,8 +22,8 @@ export default function Home() {
       <Sidebar
         selectedCladding={selectedCladding}
         selectedDesk={selectedDesk}
-        onSelectCladding={setSelectedCladding}
-        onSelectDesk={setSelectedDesk}
+        onSelectCladding={(id) => setSelectedCladding((prev) => (prev === id ? null : id))}
+        onSelectDesk={(id) => setSelectedDesk((prev) => (prev === id ? null : id))}
       />
       <PreviewPanel
         selectedCladding={selectedCladding}
