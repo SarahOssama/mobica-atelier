@@ -1,26 +1,29 @@
 /**
  * prepare-images.mjs
  * -------------------
- * Reads every `image.png` inside public/images/ and produces:
+ * Reads source images inside public/images/ and produces:
  *
  *   claddings/{id}/
  *     preview.jpg  ← full-size JPEG (background layer, no transparency needed)
  *     thumb.jpg    ← 400×300 JPEG thumbnail (4:3 crop from centre)
  *
  *   desks/{id}/
- *     preview.png  ← full-size PNG (keeps transparency for compositing)
+ *     preview.jpg  ← full-size JPEG
  *     thumb.jpg    ← 400×300 JPEG thumbnail (4:3 crop from centre)
  *
- *   chairs/{id}/
- *     preview.png  ← full-size PNG
+ *   sofas/{id}/
+ *     preview.jpg  ← full-size JPEG
  *     thumb.jpg    ← 400×300 JPEG thumbnail
+ *
+ * Source file: any .jpeg/.jpg/.png in the item folder that does NOT start
+ * with "preview" or "thumb".
  *
  * Uses only macOS `sips` — no npm dependencies required.
  * Run with:  node scripts/prepare-images.mjs
  */
 
 import { execSync } from "child_process";
-import { existsSync, readdirSync, statSync } from "fs";
+import { readdirSync, statSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -62,6 +65,23 @@ function makeThumbnail(src, dest) {
   sipsConvert(src, dest, { format: "jpeg", maxWidth: THUMB_W, maxHeight: THUMB_H });
 }
 
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function findSourceImage(itemPath) {
+  const files = readdirSync(itemPath);
+  // Prefer a raw source image (not a generated output)
+  const raw = files.find(f => {
+    const lower = f.toLowerCase();
+    return (lower.endsWith('.jpeg') || lower.endsWith('.jpg') || lower.endsWith('.png'))
+      && !lower.startsWith('preview')
+      && !lower.startsWith('thumb');
+  });
+  if (raw) return raw;
+  // Fall back to preview.jpg for items where the original source is gone
+  if (files.includes('preview.jpg')) return 'preview.jpg';
+  return undefined;
+}
+
 // ─── main ───────────────────────────────────────────────────────────────────
 
 const categories = readdirSync(IMAGES_ROOT).filter((name) => {
@@ -76,7 +96,7 @@ for (const category of categories) {
   const categoryPath = join(IMAGES_ROOT, category);
   const isCladding = category === "claddings";
   const isDesk = category === "desks";
-  const isChair = category === "chairs";
+  const isSofa = category === "sofas";
 
   const items = readdirSync(categoryPath).filter((name) =>
     statSync(join(categoryPath, name)).isDirectory()
@@ -84,25 +104,22 @@ for (const category of categories) {
 
   for (const item of items) {
     const itemPath = join(categoryPath, item);
-    const src = join(itemPath, "image.png");
+    const srcFile = findSourceImage(itemPath);
 
-    if (!existsSync(src)) {
-      console.log(`  ⚠  Skipping ${category}/${item} — no image.png found`);
+    if (!srcFile) {
+      console.log(`  ⚠  Skipping ${category}/${item} — no source image found`);
       skipped++;
       continue;
     }
 
+    const src = join(itemPath, srcFile);
     console.log(`\n📂 ${category}/${item}`);
 
     // ── preview ──────────────────────────────────────────────────────────
-    if (isCladding) {
+    if ((isCladding || isDesk || isSofa) && srcFile !== "preview.jpg") {
       const dest = join(itemPath, "preview.jpg");
       console.log(`  → preview.jpg (JPEG, full size)`);
       sipsConvert(src, dest, { format: "jpeg" });
-    } else if (isDesk || isChair) {
-      const dest = join(itemPath, "preview.png");
-      console.log(`  → preview.png (PNG, full size, transparency preserved)`);
-      sipsConvert(src, dest, { format: "png" });
     }
 
     // ── thumbnail ────────────────────────────────────────────────────────

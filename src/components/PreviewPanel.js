@@ -3,13 +3,16 @@
 import { useState, useEffect, useRef } from "react";
 import { config } from "@/config";
 
-export default function PreviewPanel({ selectedCladding, selectedDesk }) {
+export default function PreviewPanel({ selectedCladding, selectedDesk, selectedSofa }) {
   const claddingLabel = config.claddings.find((c) => c.id === selectedCladding)?.label ?? "";
   const deskLabel     = config.desks.find((d) => d.id === selectedDesk)?.label ?? "";
-  const caption       = [claddingLabel, deskLabel].filter(Boolean).join(" · ");
+  const sofaLabel     = config.sofas.find((s) => s.id === selectedSofa)?.label ?? "";
+  const caption       = [claddingLabel, deskLabel, sofaLabel].filter(Boolean).join(" · ");
 
   const [deskX, setDeskX] = useState(0);
   const [deskY, setDeskY] = useState(0);
+  const [sofaX, setSofaX] = useState(0);
+  const [sofaY, setSofaY] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const canvasContainerRef = useRef(null);
 
@@ -18,6 +21,12 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
     setDeskX(0);
     setDeskY(0);
   }, [selectedDesk]);
+
+  // Reset sofa position when sofa selection changes
+  useEffect(() => {
+    setSofaX(0);
+    setSofaY(0);
+  }, [selectedSofa]);
 
   async function handleDownload() {
     if (!claddingSrc) return;
@@ -65,6 +74,17 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
         ctx.restore();
       }
 
+      // Draw sofa overlay with current offset
+      if (sofaSrc) {
+        const sofaImg = await loadImage(sofaSrc);
+        const offsetX = (sofaX / 100) * W;
+        const offsetY = (sofaY / 100) * H;
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        drawCover(sofaImg);
+        ctx.restore();
+      }
+
       offscreen.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a   = document.createElement("a");
@@ -87,7 +107,12 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
     ? `/images/desks/${selectedDesk}/preview.png`
     : null;
 
-  const showDesk = claddingSrc && deskSrc;
+  const sofaSrc = selectedSofa
+    ? `/images/sofas/${selectedSofa}/preview.png`
+    : null;
+
+  const showDesk = !!deskSrc;
+  const showSofa = !!sofaSrc;
 
   return (
     <main
@@ -138,7 +163,7 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
               height: "100%",
               overflow: "hidden",
               borderRadius: "2px",
-              background: "#EAE3D8",
+              background: (deskSrc || sofaSrc) && !claddingSrc ? "#FFFFFF" : "#EAE3D8",
             }}
           >
             {/* Cladding base layer */}
@@ -180,10 +205,18 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
               </div>
             )}
 
-            {/* Desk overlay — transparent PNG draped over the cladding */}
-            {showDesk && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+            {/* Desk overlay — crossfades like cladding */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                transform: `translate(${deskX}%, ${deskY}%)`,
+                transition: "transform 0.1s ease",
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            >
+              <ImageLayer
                 src={deskSrc}
                 alt={deskLabel}
                 style={{
@@ -192,16 +225,36 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
                   width: "100%",
                   height: "100%",
                   objectFit: "cover",
-                  transform: `translate(${deskX}%, ${deskY}%)`,
-                  transition: "transform 0.1s ease",
-                  pointerEvents: "none",
-                  userSelect: "none",
                 }}
               />
-            )}
+            </div>
 
-            {/* Positioning controls — shown when desk is overlaid */}
-            {showDesk && (
+            {/* Sofa overlay — crossfades like cladding */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                transform: `translate(${sofaX}%, ${sofaY}%)`,
+                transition: "transform 0.1s ease",
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            >
+              <ImageLayer
+                src={sofaSrc}
+                alt={sofaLabel}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+
+            {/* Positioning controls — shown when desk or sofa is overlaid */}
+            {(showDesk || showSofa) && (
               <div
                 style={{
                   position: "absolute",
@@ -213,7 +266,8 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
                   borderRadius: "6px",
                   padding: "10px 22px",
                   display: "flex",
-                  gap: "18px",
+                  flexDirection: "column",
+                  gap: "10px",
                   alignItems: "center",
                   boxShadow:
                     "0 2px 12px rgba(44,34,24,0.12), 0 0 0 1px rgba(44,34,24,0.06)",
@@ -221,29 +275,58 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                <SliderControl
-                  label="← →"
-                  value={deskX}
-                  onChange={setDeskX}
-                />
-                <div
-                  style={{
-                    width: "1px",
-                    height: "28px",
-                    background: "rgba(44,34,24,0.12)",
-                    flexShrink: 0,
-                  }}
-                />
-                <SliderControl
-                  label="↑ ↓"
-                  value={deskY}
-                  onChange={setDeskY}
-                />
+                {showDesk && (
+                  <div style={{ display: "flex", gap: "18px", alignItems: "center" }}>
+                    <SliderControl
+                      label="← →"
+                      value={deskX}
+                      onChange={setDeskX}
+                    />
+                    <div
+                      style={{
+                        width: "1px",
+                        height: "28px",
+                        background: "rgba(44,34,24,0.12)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <SliderControl
+                      label="↑ ↓"
+                      value={deskY}
+                      onChange={setDeskY}
+                    />
+                  </div>
+                )}
+                {showDesk && showSofa && (
+                  <div style={{ width: "100%", height: "1px", background: "rgba(44,34,24,0.12)" }} />
+                )}
+                {showSofa && (
+                  <div style={{ display: "flex", gap: "18px", alignItems: "center" }}>
+                    <SliderControl
+                      label="← →"
+                      value={sofaX}
+                      onChange={setSofaX}
+                    />
+                    <div
+                      style={{
+                        width: "1px",
+                        height: "28px",
+                        background: "rgba(44,34,24,0.12)",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <SliderControl
+                      label="↑ ↓"
+                      value={sofaY}
+                      onChange={setSofaY}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
             {/* Prompt when only cladding is selected */}
-            {claddingSrc && !deskSrc && (
+            {claddingSrc && !showDesk && !showSofa && (
               <div
                 style={{
                   position: "absolute",
@@ -269,7 +352,7 @@ export default function PreviewPanel({ selectedCladding, selectedDesk }) {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Select a desk to overlay
+                  Select a desk or sofa to overlay
                 </p>
               </div>
             )}

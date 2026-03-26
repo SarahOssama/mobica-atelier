@@ -1,17 +1,30 @@
 export const config = {
   claddings: [
-    { id: "cladding-1", label: "Organic Wave" },
-    { id: "cladding-2", label: "Classic White" },
-    { id: "cladding-3", label: "Marble & Taupe" },
-    { id: "cladding-4", label: "Natural Oak" },
+    { id: "cladding-1", label: "Cladding 1" },
+    { id: "cladding-2", label: "Cladding 2" },
+    { id: "cladding-3", label: "Cladding 3" },
+    { id: "cladding-4", label: "Cladding 4" },
+    { id: "cladding-5", label: "Cladding 5" },
+    { id: "cladding-6", label: "Cladding 6" },
+    { id: "cladding-7", label: "Cladding 7" },
+    { id: "cladding-8", label: "Cladding 8" },
+    { id: "cladding-9", label: "Cladding 9" },
+    { id: "cladding-10", label: "Cladding 10" },
+    { id: "cladding-11", label: "Cladding 11" },
   ],
   desks: [
-    { id: "desk-1", label: "Executive Double" },
-    { id: "desk-2", label: "Dark Executive" },
-    { id: "desk-3", label: "Minimal Dark" },
-    { id: "desk-4", label: "Warm Walnut" },
+    { id: "desk-1", label: "Square Desk" },
+    { id: "desk-2", label: "Regal Desl" },
+    { id: "desk-3", label: "Blade Desk" },
+    { id: "desk-4", label: "Nasdaq Desk" },
+    { id: "desk-5", label: "Desk 5" },
   ],
-  chairs: [
-    // { id: "ergonomic", label: "Ergonomic" },  ← uncomment when ready
+  sofas: [
+    { id: "sofa-1", label: "Chester Field Sofa" },
+    { id: "sofa-2", label: "Red Sofa" },
+    { id: "sofa-3", label: "Mamdy Sofa" },
+    { id: "sofa-4", label: "Soft Sofa" },
+    { id: "sofa-5", label: "Voge Sofa" },
+    { id: "sofa-6", label: "Iconic Armchair 01" },
   ],
 };

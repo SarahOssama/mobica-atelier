@@ -1,10 +1,13 @@
 /**
  * remove-bg.js
  * ------------
- * Removes white backgrounds from desk preview images.
+ * Removes white backgrounds from desk and sofa preview images.
  *
  * Input:  public/images/desks/desk-{N}/preview.jpg
  * Output: public/images/desks/desk-{N}/preview.png  (transparent PNG)
+ *
+ * Input:  public/images/sofas/sofa-{N}/preview.jpg
+ * Output: public/images/sofas/sofa-{N}/preview.png  (transparent PNG)
  *
  * Algorithm: flood-fill from image edges to mark connected white-ish background
  * pixels, then set those pixels to fully transparent. Handles anti-aliased edges
@@ -18,7 +21,8 @@ const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 
-const DESKS_ROOT = path.join(__dirname, "../public/images/desks");
+const DESKS_ROOT  = path.join(__dirname, "../public/images/desks");
+const SOFAS_ROOT  = path.join(__dirname, "../public/images/sofas");
 const THRESHOLD = 15; // how far from pure white (#FFF) a pixel can be and still be "background"
 const FEATHER = 10;   // additional range for soft alpha blending at edges
 
@@ -98,30 +102,42 @@ async function removeWhiteBackground(inputPath, outputPath) {
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
-(async () => {
-  const desks = fs.readdirSync(DESKS_ROOT).filter((name) => {
-    const full = path.join(DESKS_ROOT, name);
+async function processCategory(rootDir, categoryLabel) {
+  const items = fs.readdirSync(rootDir).filter((name) => {
+    const full = path.join(rootDir, name);
     return fs.statSync(full).isDirectory();
   });
 
   let processed = 0;
   let skipped = 0;
 
-  for (const desk of desks) {
-    const inputPath  = path.join(DESKS_ROOT, desk, "preview.jpg");
-    const outputPath = path.join(DESKS_ROOT, desk, "preview.png");
+  console.log(`\n── ${categoryLabel} ──`);
+
+  for (const item of items) {
+    const inputPath  = path.join(rootDir, item, "preview.jpg");
+    const outputPath = path.join(rootDir, item, "preview.png");
 
     if (!fs.existsSync(inputPath)) {
-      console.log(`  ⚠  ${desk}: no preview.jpg — skipped`);
+      console.log(`  ⚠  ${item}: no preview.jpg — skipped`);
       skipped++;
       continue;
     }
 
-    process.stdout.write(`  ${desk}: removing background… `);
+    process.stdout.write(`  ${item}: removing background… `);
     await removeWhiteBackground(inputPath, outputPath);
     console.log("✓");
     processed++;
   }
 
-  console.log(`\n✅  Done — ${processed} processed, ${skipped} skipped.`);
+  return { processed, skipped };
+}
+
+(async () => {
+  const desks  = await processCategory(DESKS_ROOT,  "Desks");
+  const sofas  = await processCategory(SOFAS_ROOT,  "Sofas");
+
+  const totalProcessed = desks.processed + sofas.processed;
+  const totalSkipped   = desks.skipped   + sofas.skipped;
+
+  console.log(`\n✅  Done — ${totalProcessed} processed, ${totalSkipped} skipped.`);
 })();

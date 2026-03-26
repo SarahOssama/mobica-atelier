@@ -4,7 +4,7 @@ import { useState } from "react";
 import OptionCard from "./OptionCard";
 import { config } from "@/config";
 
-export default function Sidebar({ selectedCladding, selectedDesk, onSelectCladding, onSelectDesk }) {
+export default function Sidebar({ selectedCladding, selectedDesk, selectedSofa, onSelectCladding, onSelectDesk, onSelectSofa }) {
   // Flatten all items for animation delay calculation
   const totalCladdings = config.claddings.length;
 
@@ -69,7 +69,7 @@ export default function Sidebar({ selectedCladding, selectedDesk, onSelectCladdi
         </div>
 
         {/* Desks Section */}
-        <SectionTitle>Desk Style</SectionTitle>
+        <SectionTitle>EXCUTIVE DESKS</SectionTitle>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "28px" }}>
           {config.desks.map((item, i) => (
             <OptionCard
@@ -85,28 +85,21 @@ export default function Sidebar({ selectedCladding, selectedDesk, onSelectCladdi
           ))}
         </div>
 
-        {/* Chairs Section — Coming Soon */}
-        <SectionTitle muted>Seating</SectionTitle>
+        {/* Sofas Section */}
+        <SectionTitle>SOFAS &amp; SEATING</SectionTitle>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "28px" }}>
-          {config.chairs.length === 0 ? (
-            /* Show placeholder cards when chairs array is empty */
-            [0, 1].map((i) => (
-              <PlaceholderCard key={i} animDelay={(totalCladdings + config.desks.length + i) * 60} />
-            ))
-          ) : (
-            config.chairs.map((item, i) => (
-              <OptionCard
-                key={item.id}
-                id={item.id}
-                label={item.label}
-                thumbSrc={`/images/chairs/${item.id}/thumb.jpg`}
-                isSelected={false}
-                isDisabled={true}
-                onSelect={() => {}}
-                animDelay={(totalCladdings + config.desks.length + i) * 60}
-              />
-            ))
-          )}
+          {config.sofas.map((item, i) => (
+            <OptionCard
+              key={item.id}
+              id={item.id}
+              label={item.label}
+              thumbSrc={`/images/sofas/${item.id}/thumb.jpg`}
+              isSelected={selectedSofa === item.id}
+              isDisabled={false}
+              onSelect={onSelectSofa}
+              animDelay={(totalCladdings + config.desks.length + i) * 60}
+            />
+          ))}
         </div>
       </div>
 
@@ -166,45 +159,5 @@ function LogoImage() {
       style={{ height: "40px", width: "auto", objectFit: "contain", display: "block" }}
       onError={() => setShow(false)}
     />
-  );
-}
-
-function PlaceholderCard({ animDelay }) {
-  return (
-    <div
-      className="card-enter"
-      style={{
-        animationDelay: `${animDelay}ms`,
-        borderRadius: "2px",
-        overflow: "hidden",
-        border: "2px solid transparent",
-        background: "#EDE0CE",
-        filter: "grayscale(1) opacity(0.35)",
-        position: "relative",
-      }}
-    >
-      <div style={{ aspectRatio: "4/3", background: "#D6CCBC" }} />
-      <div style={{ padding: "8px", fontSize: "0.78rem", fontFamily: "'Jost', sans-serif", fontWeight: 300, color: "#2C2218" }}>
-        —
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          top: "6px",
-          right: "6px",
-          background: "#8B6B4A",
-          color: "#F5F0E8",
-          fontSize: "0.6rem",
-          fontFamily: "'Jost', sans-serif",
-          fontWeight: 400,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          padding: "2px 5px",
-          borderRadius: "2px",
-        }}
-      >
-        Coming Soon
-      </div>
-    </div>
   );
 }

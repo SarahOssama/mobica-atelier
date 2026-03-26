@@ -7,6 +7,7 @@ import PreviewPanel from "@/components/PreviewPanel";
 export default function Home() {
   const [selectedCladding, setSelectedCladding] = useState(null);
   const [selectedDesk, setSelectedDesk] = useState(null);
+  const [selectedSofa, setSelectedSofa] = useState(null);
 
   return (
     <div
@@ -21,12 +22,15 @@ export default function Home() {
       <Sidebar
         selectedCladding={selectedCladding}
         selectedDesk={selectedDesk}
+        selectedSofa={selectedSofa}
         onSelectCladding={(id) => setSelectedCladding((prev) => (prev === id ? null : id))}
-        onSelectDesk={(id) => setSelectedDesk((prev) => (prev === id ? null : id))}
+        onSelectDesk={(id) => { setSelectedDesk((prev) => (prev === id ? null : id)); setSelectedSofa(null); }}
+        onSelectSofa={(id) => { setSelectedSofa((prev) => (prev === id ? null : id)); setSelectedDesk(null); }}
       />
       <PreviewPanel
         selectedCladding={selectedCladding}
         selectedDesk={selectedDesk}
+        selectedSofa={selectedSofa}
       />
     </div>
   );
